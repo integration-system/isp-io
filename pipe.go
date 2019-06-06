@@ -4,11 +4,17 @@ import (
 	"io"
 )
 
-type Pipe struct {
+type Pipe interface {
+	io.WriteCloser
+	Unshift(wr io.Writer)
+	Last() io.Writer
+}
+
+type writeChain struct {
 	writers []io.Writer
 }
 
-func (p Pipe) Close() error {
+func (p writeChain) Close() error {
 	for _, w := range p.writers {
 		if f, ok := w.(interface{ Flush() error }); ok {
 			f.Flush() //TODO handle error
@@ -20,18 +26,18 @@ func (p Pipe) Close() error {
 	return nil
 }
 
-func (p Pipe) Write(bytes []byte) (int, error) {
+func (p writeChain) Write(bytes []byte) (int, error) {
 	if len(p.writers) == 0 {
 		return 0, nil
 	}
 	return p.writers[0].Write(bytes)
 }
 
-func (p *Pipe) Unshift(wr io.Writer) {
+func (p *writeChain) Unshift(wr io.Writer) {
 	p.writers = append([]io.Writer{wr}, p.writers...)
 }
 
-func (p Pipe) Last() io.Writer {
+func (p writeChain) Last() io.Writer {
 	if len(p.writers) == 0 {
 		return nil
 	}
@@ -40,5 +46,7 @@ func (p Pipe) Last() io.Writer {
 }
 
 func NewPipe(writers ...io.Writer) Pipe {
-	return Pipe{}
+	return &writeChain{
+		writers: writers,
+	}
 }

@@ -4,7 +4,7 @@ import (
 	"io"
 )
 
-type Pipe interface {
+type WritePipe interface {
 	io.WriteCloser
 	Unshift(wr io.Writer)
 	Last() io.Writer
@@ -45,7 +45,7 @@ func (p writeChain) Last() io.Writer {
 	return p.writers[len(p.writers)-1]
 }
 
-func NewPipe(writers ...io.Writer) Pipe {
+func NewWritePipe(writers ...io.Writer) WritePipe {
 	return &writeChain{
 		writers: writers,
 	}

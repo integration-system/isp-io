@@ -19,6 +19,9 @@ func (p writeChain) Close() error {
 		if f, ok := w.(interface{ Flush() error }); ok {
 			f.Flush() //TODO handle error
 		}
+		if f, ok := w.(interface{ Flush() }); ok {
+			f.Flush()
+		}
 		if c, ok := w.(io.Closer); ok {
 			c.Close() //TODO handle error
 		}

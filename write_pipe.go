@@ -17,13 +17,17 @@ type writeChain struct {
 func (p writeChain) Close() error {
 	for _, w := range p.writers {
 		if f, ok := w.(interface{ Flush() error }); ok {
-			f.Flush() //TODO handle error
+			if err := f.Flush(); err != nil {
+				return err
+			}
 		}
 		if f, ok := w.(interface{ Flush() }); ok {
 			f.Flush()
 		}
 		if c, ok := w.(io.Closer); ok {
-			c.Close() //TODO handle error
+			if err := c.Close(); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
